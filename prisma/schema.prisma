@@ -1,0 +1,199 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Auth (NextAuth Prisma Adapter) ────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── User ──────────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  email         String?   @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  stravaId      String?   @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts   Account[]
+  sessions   Session[]
+  token      StravaToken?
+  activities Activity[]
+  goals      Goal[]
+  userBadges UserBadge[]
+  syncLogs   SyncLog[]
+}
+
+// ─── Strava Token ──────────────────────────────────────────────────────────
+
+model StravaToken {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  accessToken  String
+  refreshToken String
+  expiresAt    DateTime
+  scope        String
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── Activity ──────────────────────────────────────────────────────────────
+
+model Activity {
+  id               String   @id @default(cuid())
+  stravaId         String   @unique
+  userId           String
+  name             String
+  type             String   // ActivityType as String for SQLite
+  sportType        String
+  startDate        DateTime
+  timezone         String   @default("UTC")
+  distance         Float    @default(0)
+  movingTime       Int      @default(0)
+  elapsedTime      Int      @default(0)
+  totalElevation   Float    @default(0)
+  avgSpeed         Float    @default(0)
+  maxSpeed         Float    @default(0)
+  avgHeartRate     Float?
+  maxHeartRate     Float?
+  avgCadence       Float?
+  avgWatts         Float?
+  weightedAvgWatts Float?
+  calories         Float?
+  kudosCount       Int      @default(0)
+  commentsCount    Int      @default(0)
+  achievementCount Int      @default(0)
+  mapPolyline      String?
+  mapPolylineDetail String?
+  startLat         Float?
+  startLng         Float?
+  endLat           Float?
+  endLng           Float?
+  gearId           String?
+  gearName         String?
+  description      String?
+  photos           String?  // JSON string
+  laps             String?  // JSON string
+  splits           String?  // JSON string
+  rawData          String   // JSON string
+  shareId          String?  @unique  // public share token
+  syncedAt         DateTime @default(now())
+  createdAt        DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startDate])
+  @@index([userId, type])
+}
+
+// ─── Goal ──────────────────────────────────────────────────────────────────
+
+model Goal {
+  id           String    @id @default(cuid())
+  userId       String
+  title        String
+  type         String    // GoalType as String
+  activityType String?
+  target       Float
+  unit         String
+  period       String    // GoalPeriod as String
+  startDate    DateTime
+  endDate      DateTime
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isActive])
+}
+
+// ─── Badge ─────────────────────────────────────────────────────────────────
+
+model Badge {
+  id          String @id @default(cuid())
+  slug        String @unique
+  name        String
+  description String
+  icon        String
+  category    String // BadgeCategory as String
+  criteria    String // JSON string
+  sortOrder   Int    @default(0)
+
+  userBadges UserBadge[]
+}
+
+model UserBadge {
+  id         String   @id @default(cuid())
+  userId     String
+  badgeId    String
+  earnedAt   DateTime @default(now())
+  activityId String?
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id])
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+}
+
+// ─── Sync Log ──────────────────────────────────────────────────────────────
+
+model SyncLog {
+  id               String    @id @default(cuid())
+  userId           String
+  type             String    // SyncType as String
+  status           String    @default("PENDING")
+  activitiesSynced Int       @default(0)
+  pagesProcessed   Int       @default(0)
+  error            String?
+  startedAt        DateTime  @default(now())
+  completedAt      DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startedAt])
+}
