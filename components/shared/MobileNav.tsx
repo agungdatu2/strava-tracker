@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { LayoutDashboard, Activity, Target, Calendar, Lightbulb, Award } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { LayoutDashboard, Activity, Target, Calendar, Lightbulb, Award, Loader2 } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/dashboard",            label: "Dashboard", icon: LayoutDashboard },
@@ -14,23 +15,38 @@ const NAV_ITEMS = [
 
 export function MobileNav() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [loading, setLoading] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(null);
+  }, [pathname]);
+
+  function handleClick(href: string) {
+    if (href !== pathname) setLoading(href);
+    router.push(href);
+  }
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t flex items-center justify-around px-2 py-2" style={{ background: "#FC4C02" }}>
       {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
         const active = pathname === href;
+        const isLoading = loading === href;
         return (
-          <Link
+          <button
             key={href}
-            href={href}
+            onClick={() => handleClick(href)}
             className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg transition-colors ${
               active ? "text-white" : "text-white/60 hover:text-white"
             }`}
           >
-            <Icon className={`w-5 h-5 ${active ? "drop-shadow-sm" : ""}`} />
+            {isLoading
+              ? <Loader2 className="w-5 h-5 animate-spin" />
+              : <Icon className="w-5 h-5" />
+            }
             <span className={`text-[10px] ${active ? "font-semibold" : ""}`}>{label}</span>
             {active && <span className="w-1 h-1 rounded-full bg-white mt-0.5" />}
-          </Link>
+          </button>
         );
       })}
     </nav>
