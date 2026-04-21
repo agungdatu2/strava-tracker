@@ -1,24 +1,12 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import Image from "next/image";
 import { auth, signOut } from "@/lib/auth";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { SyncButton } from "@/components/shared/SyncButton";
 import { DbSync } from "@/components/shared/DbSync";
 import { MobileNav } from "@/components/shared/MobileNav";
-import {
-  LayoutDashboard, Activity, Target, Calendar,
-  Lightbulb, Award, LogOut,
-} from "lucide-react";
-
-const NAV_ITEMS = [
-  { href: "/dashboard",            label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/activities", label: "Aktivitas", icon: Activity },
-  { href: "/dashboard/goals",      label: "Target",    icon: Target },
-  { href: "/dashboard/calendar",   label: "Kalender",  icon: Calendar },
-  { href: "/dashboard/insights",   label: "Insight",   icon: Lightbulb },
-  { href: "/dashboard/badges",     label: "Badge",     icon: Award },
-];
+import { SidebarNav } from "@/components/shared/SidebarNav";
+import { Activity, LogOut } from "lucide-react";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -45,18 +33,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <span className="font-bold text-sm">Strava Tracker</span>
         </div>
 
-        <nav className="flex-1 p-3 space-y-0.5">
-          {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-            >
-              <Icon className="w-4 h-4" />
-              {label}
-            </Link>
-          ))}
-        </nav>
+        <SidebarNav />
 
         <div className="p-3 border-t space-y-2">
           <div className="flex items-center gap-2 px-3 py-2">
