@@ -16,6 +16,16 @@ export async function POST() {
 
   const userId = dbUser.id;
 
+  // Reset stuck RUNNING syncs older than 5 minutes
+  await db.syncLog.updateMany({
+    where: {
+      userId,
+      status: "RUNNING",
+      startedAt: { lt: new Date(Date.now() - 5 * 60 * 1000) },
+    },
+    data: { status: "FAILED", error: "Timed out" },
+  });
+
   const running = await db.syncLog.findFirst({
     where: { userId, status: "RUNNING" },
   });
