@@ -5,6 +5,7 @@ import { auth, signOut } from "@/lib/auth";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { SyncButton } from "@/components/shared/SyncButton";
 import { DbSync } from "@/components/shared/DbSync";
+import { MobileNav } from "@/components/shared/MobileNav";
 import {
   LayoutDashboard, Activity, Target, Calendar,
   Lightbulb, Award, LogOut,
@@ -100,19 +101,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </main>
       </div>
 
-      {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t flex items-center justify-around px-2 py-2" style={{ background: "#FC4C02" }}>
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-white/80 hover:text-white transition-colors"
-          >
-            <Icon className="w-5 h-5" />
-            <span className="text-[10px]">{label}</span>
-          </Link>
-        ))}
-      </nav>
+      <MobileNav />
     </div>
   );
 }
