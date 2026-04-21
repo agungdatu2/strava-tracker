@@ -1,7 +1,6 @@
 "use client";
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useTransition, useState } from "react";
 import { LayoutDashboard, Activity, Target, Calendar, Lightbulb, Award, Loader2 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -16,22 +15,24 @@ const NAV_ITEMS = [
 export function MobileNav() {
   const pathname = usePathname();
   const router = useRouter();
-  const [loading, setLoading] = useState<string | null>(null);
-
-  useEffect(() => {
-    setLoading(null);
-  }, [pathname]);
+  const [isPending, startTransition] = useTransition();
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
 
   function handleClick(href: string) {
-    if (href !== pathname) setLoading(href);
-    router.push(href);
+    if (href === pathname) return;
+    setPendingHref(href);
+    startTransition(() => {
+      router.push(href);
+    });
   }
+
+  if (!isPending && pendingHref) setPendingHref(null);
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t flex items-center justify-around px-2 py-2" style={{ background: "#FC4C02" }}>
       {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
         const active = pathname === href;
-        const isLoading = loading === href;
+        const isLoading = isPending && pendingHref === href;
         return (
           <button
             key={href}
