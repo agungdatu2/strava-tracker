@@ -53,10 +53,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async session({ session, token }) {
       session.user.id = token.sub ?? "";
-      (session.user as { stravaId?: string; needsDbSync?: boolean }).stravaId =
-        token.stravaId as string;
-      (session.user as { needsDbSync?: boolean }).needsDbSync =
-        (token.needsDbSync as boolean) ?? false;
+      const u = session.user as {
+        stravaId?: string; needsDbSync?: boolean;
+        accessToken?: string; refreshToken?: string;
+        expiresAt?: number; scope?: string;
+      };
+      u.stravaId = token.stravaId as string;
+      u.needsDbSync = (token.needsDbSync as boolean) ?? false;
+      u.accessToken = token.accessToken as string;
+      u.refreshToken = token.refreshToken as string;
+      u.expiresAt = token.expiresAt as number;
+      u.scope = token.scope as string;
       return session;
     },
   },
