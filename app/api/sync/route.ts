@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -47,8 +48,8 @@ export async function POST() {
     data: { userId, type, status: "RUNNING" },
   });
 
-  // Run sync in background (don't await — return immediately)
-  (async () => {
+  // Use after() so Vercel keeps the function alive until sync completes
+  after(async () => {
     try {
       const result = await syncActivities(userId, afterTimestamp);
       await evaluateBadges(userId);
@@ -68,7 +69,7 @@ export async function POST() {
         data: { status: "FAILED", error: message, completedAt: new Date() },
       });
     }
-  })();
+  });
 
   return NextResponse.json({ message: type === "FULL" ? "Full sync dimulai" : "Incremental sync dimulai" });
 }
