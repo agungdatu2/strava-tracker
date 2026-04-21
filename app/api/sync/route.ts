@@ -17,6 +17,28 @@ export async function POST() {
 
   const userId = dbUser.id;
 
+  // Save token from session if not in DB yet
+  const tok = session.user as { accessToken?: string; refreshToken?: string; expiresAt?: number; scope?: string };
+  if (tok.accessToken && tok.refreshToken && tok.expiresAt) {
+    const { encrypt } = await import("@/lib/crypto");
+    await db.stravaToken.upsert({
+      where: { userId },
+      update: {
+        accessToken: encrypt(tok.accessToken),
+        refreshToken: encrypt(tok.refreshToken),
+        expiresAt: new Date(tok.expiresAt * 1000),
+        scope: tok.scope ?? "",
+      },
+      create: {
+        userId,
+        accessToken: encrypt(tok.accessToken),
+        refreshToken: encrypt(tok.refreshToken),
+        expiresAt: new Date(tok.expiresAt * 1000),
+        scope: tok.scope ?? "",
+      },
+    });
+  }
+
   // Reset stuck RUNNING syncs older than 5 minutes
   await db.syncLog.updateMany({
     where: {
